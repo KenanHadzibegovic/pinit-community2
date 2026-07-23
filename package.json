@@ -1,0 +1,8 @@
+{
+  "name": "pinit-zajednica",
+  "version": "1.0.0",
+  "description": "PINIT Zajednica — komsiluk na okupu. Besplatno i neprofitno.",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" }
+}

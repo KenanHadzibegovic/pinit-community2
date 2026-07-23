@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: pinit-zajednica
+    runtime: node
+    plan: free
+    buildCommand: ""
+    startCommand: node server.js
