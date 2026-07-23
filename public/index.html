@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#1a7a34">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="PINIT Zajednica">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<title>PINIT Zajednica</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+ --g:#1a7a34;--gd:#0f4f21;--gm:#2e9e4a;--gl:#e8f5ec;--gl2:#d4ebdb;
+ --bg:#f2f2f7;--card:#fff;--card2:rgba(255,255,255,.96);--bgt:rgba(242,242,247,.96);
+ --sep:rgba(60,60,67,.14);--sep2:rgba(60,60,67,.07);
+ --tx:#000;--tx2:#3c3c43;--tx3:#71717a;--shad:rgba(0,0,0,.13);
+ --r:#d63b2f;
+ --rl:18px;--rm:13px;
+ --fn:'Inter',-apple-system,BlinkMacSystemFont,system-ui,'Segoe UI',Roboto,sans-serif;
+ --fh:'Poppins',var(--fn);
+}
+html[data-theme="dark"]{
+ --gl:#123020;--gl2:#17402a;--gm:#3ec062;
+ --bg:#0b0d12;--card:#171a20;--card2:rgba(23,26,32,.96);--bgt:rgba(11,13,18,.96);
+ --sep:rgba(255,255,255,.16);--sep2:rgba(255,255,255,.08);
+ --tx:#fff;--tx2:#e4e4e7;--tx3:#a1a1aa;--shad:rgba(0,0,0,.55);
+ --r:#ff6b5e;
+}
+html[data-theme="dark"] .maplibregl-map{filter:brightness(.85) contrast(1.05);}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{position:fixed;inset:0;width:100%;height:100%;overflow:hidden;overscroll-behavior:none;
+ touch-action:manipulation;background:var(--bg);font-family:var(--fn);color:var(--tx);
+ -webkit-font-smoothing:antialiased;}
+.app{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg);}
+button,input,textarea,select{font-family:var(--fn);color:var(--tx);}
+svg{display:block;}
+
+/* ══ SPLASH ══ */
+#splash{position:fixed;inset:0;z-index:100000;background:linear-gradient(160deg,#25a349 0%,#0d4a22 100%);
+ display:flex;align-items:center;justify-content:center;transition:opacity .5s ease,transform .55s ease;}
+#splash.done{opacity:0;transform:scale(1.08);pointer-events:none;}
+.sp-wrap{display:flex;align-items:center;}
+.sp-pinbox{position:relative;display:flex;align-items:center;justify-content:center;}
+.sp-ring{position:absolute;width:82px;height:82px;border-radius:50%;border:3px solid rgba(255,255,255,.5);
+ opacity:0;animation:spRing 1s ease-out 1s 2;}
+.sp-pin{width:80px;height:80px;fill:#fff;transform-origin:50% 92%;
+ filter:drop-shadow(0 12px 22px rgba(0,0,0,.3));
+ animation:spDrop .8s cubic-bezier(.2,1.5,.45,1) both,spWiggle 1.15s ease-in-out .8s;}
+.sp-word{color:#fff;font-family:var(--fh);font-weight:700;font-size:42px;letter-spacing:1.5px;
+ white-space:nowrap;margin-left:4px;opacity:0;transform:translateX(-24px);
+ animation:spWord .55s cubic-bezier(.2,1.3,.4,1) 1s both;}
+.sp-sub{position:absolute;bottom:17%;left:0;right:0;text-align:center;color:rgba(255,255,255,.88);
+ font-family:var(--fh);font-weight:600;font-size:13px;letter-spacing:3.5px;opacity:0;
+ animation:spWord .5s ease 1.35s both;}
+@keyframes spDrop{0%{transform:translateY(-150px) scale(.35);opacity:0}60%{opacity:1}80%{transform:translateY(9px) scale(1.05)}100%{transform:translateY(0) scale(1);opacity:1}}
+@keyframes spWiggle{0%,100%{transform:rotate(0)}22%{transform:rotate(-10deg)}48%{transform:rotate(7deg)}74%{transform:rotate(-4deg)}}
+@keyframes spWord{to{opacity:1;transform:translateX(0)}}
+@keyframes spRing{0%{transform:scale(.55);opacity:.7}100%{transform:scale(2.5);opacity:0}}
+
+/* ══ TOP ══ */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;
+ padding:calc(env(safe-area-inset-top) + 13px) 18px 12px;background:var(--bgt);
+ backdrop-filter:blur(14px);border-bottom:1px solid var(--sep2);flex-shrink:0;z-index:6;}
+.top .tl{min-width:0;flex:1;}
+.brand{font-family:var(--fh);font-size:11.5px;font-weight:600;color:var(--gm);letter-spacing:2px;
+ white-space:nowrap;margin-bottom:1px;}
+.top h2{font-family:var(--fh);font-size:21px;font-weight:700;letter-spacing:-.5px;line-height:1.15;
+ color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.top p{font-size:12.5px;color:var(--tx3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tbtn{flex-shrink:0;background:var(--card);border:1.5px solid var(--sep);border-radius:13px;
+ padding:9px 13px;font-family:var(--fh);font-size:12.5px;font-weight:600;color:var(--tx2);cursor:pointer;
+ display:flex;align-items:center;gap:7px;white-space:nowrap;}
+.tbtn svg{width:15px;height:15px;fill:var(--g);flex-shrink:0;}
+
+/* ══ SCREENS ══ */
+.scr{flex:1;display:none;flex-direction:column;overflow:hidden;min-height:0;}
+.scr.on{display:flex;}
+.shdr{padding:calc(env(safe-area-inset-top) + 16px) 18px 8px;flex-shrink:0;}
+.shdr h2{font-family:var(--fh);font-size:23px;font-weight:700;letter-spacing:-.6px;color:var(--tx);}
+.shdr p{font-size:13px;color:var(--tx3);margin-top:3px;}
+
+/* ══ HERO / SCROLL ══ */
+.hero{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
+ padding:0 22px calc(30px + env(safe-area-inset-bottom));display:flex;flex-direction:column;}
+.hero::-webkit-scrollbar{display:none;}
+.hero>*{flex-shrink:0;}
+.body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
+ padding:14px 18px calc(120px + env(safe-area-inset-bottom));
+ display:flex;flex-direction:column;gap:14px;}
+.body::-webkit-scrollbar{display:none;}
+.body>*{flex-shrink:0;}
+
+.logo{width:72px;height:72px;border-radius:22px;background:linear-gradient(135deg,var(--gm),var(--gd));
+ display:flex;align-items:center;justify-content:center;margin:36px 0 22px;
+ box-shadow:0 10px 26px rgba(26,122,52,.3);}
+.logo svg{width:40px;height:40px;fill:#fff;}
+.h1{font-family:var(--fh);font-size:30px;font-weight:700;letter-spacing:-.9px;line-height:1.13;color:var(--tx);}
+.h1s{font-size:14.5px;color:var(--tx3);margin-top:11px;line-height:1.6;}
+.free{display:inline-flex;align-items:center;gap:8px;background:var(--gl);color:var(--gd);
+ font-size:12.5px;font-weight:700;padding:9px 13px;border-radius:10px;margin-top:18px;align-self:flex-start;}
+.free svg{width:16px;height:16px;fill:var(--g);flex-shrink:0;}
+html[data-theme="dark"] .free{color:var(--gm);}
+html[data-theme="dark"] .free svg{fill:var(--gm);}
+
+/* ══ FORM ══ */
+.fld{margin-bottom:15px;}
+.fld label{font-size:11.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;
+ letter-spacing:.6px;margin-bottom:8px;display:block;}
+.inp{width:100%;border:1.5px solid var(--sep);border-radius:var(--rm);padding:14px;font-size:16px;
+ outline:none;background:var(--card);color:var(--tx);transition:border-color .15s;}
+.inp:focus{border-color:var(--g);}
+.inp::placeholder{color:var(--tx3);opacity:.85;}
+textarea.inp{resize:none;line-height:1.5;}
+.two{display:flex;gap:10px;}
+.two .fld{flex:1;}
+.abtn{width:100%;border:none;border-radius:16px;padding:15px;font-family:var(--fh);font-size:16px;
+ font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;
+ letter-spacing:-.3px;transition:transform .16s cubic-bezier(.34,1.56,.64,1);}
+.abtn:active{transform:scale(.96);}
+.abtn.pr{background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;box-shadow:0 8px 20px rgba(26,122,52,.32);}
+.abtn.pr:disabled{background:var(--sep);color:var(--tx3);box-shadow:none;cursor:default;}
+.abtn.pr svg{fill:#fff;}
+.abtn.se{background:var(--card);color:var(--tx);border:1.5px solid var(--sep);}
+.abtn.se svg{fill:var(--g);}
+.abtn.gh{background:var(--card);color:var(--tx2);border:1.5px solid var(--sep);font-size:14.5px;padding:13px;}
+.abtn.dg{background:var(--card);color:var(--r);border:1.5px solid var(--r);}
+.abtn svg{width:19px;height:19px;flex-shrink:0;}
+.note{background:var(--gl);border:1px solid var(--gl2);border-radius:var(--rm);padding:13px 15px;
+ font-size:12.5px;color:var(--gd);line-height:1.55;display:flex;gap:10px;align-items:flex-start;}
+.note svg{width:17px;height:17px;fill:var(--g);flex-shrink:0;margin-top:1px;}
+html[data-theme="dark"] .note{color:#c9e8d4;}
+html[data-theme="dark"] .note svg{fill:var(--gm);}
+.note.warn{background:var(--card);border-color:var(--sep);color:var(--tx2);}
+html[data-theme="dark"] .note.warn{color:var(--tx2);}
+.note.warn svg{fill:var(--tx3);}
+
+/* ══ LIST CARDS ══ */
+.clist{display:flex;flex-direction:column;gap:11px;}
+.ccard{background:var(--card);border-radius:var(--rl);border:1px solid var(--sep2);padding:15px;
+ cursor:pointer;box-shadow:0 1px 6px var(--shad);display:flex;gap:14px;align-items:center;
+ transition:transform .14s;}
+.ccard:active{transform:scale(.98);}
+.ico{border-radius:15px;background:var(--gl);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ico svg{fill:var(--g);}
+html[data-theme="dark"] .ico svg{fill:var(--gm);}
+.ccard .ico{width:50px;height:50px;}
+.ccard .ico svg{width:26px;height:26px;}
+.ccard .cn{font-family:var(--fh);font-size:15.5px;font-weight:600;letter-spacing:-.2px;color:var(--tx);}
+.ccard .cm{font-size:12px;color:var(--tx3);margin-top:5px;display:flex;gap:7px;flex-wrap:wrap;align-items:center;}
+.tagz{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:7px;background:var(--gl);color:var(--gd);}
+html[data-theme="dark"] .tagz{color:var(--gm);}
+.tagz.mem{background:var(--g);color:#fff;}
+html[data-theme="dark"] .tagz.mem{color:#fff;}
+.tagz.out{background:var(--sep2);color:var(--tx3);}
+.chev{color:var(--tx3);font-size:21px;flex-shrink:0;line-height:1;}
+.empty{text-align:center;padding:36px 18px;color:var(--tx3);font-size:14px;line-height:1.65;}
+.empty svg{width:44px;height:44px;fill:var(--sep);margin:0 auto 12px;}
+
+/* ══ MAP ══ */
+.mapwrap{flex:1;position:relative;min-height:0;background:var(--gl);}
+#map,#cmap{position:absolute;inset:0;}
+.maplibregl-ctrl-attrib{font-size:9px;}
+.mbtn{position:absolute;z-index:5;width:46px;height:46px;border-radius:15px;background:var(--card2);
+ border:none;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(0,0,0,.18);
+ cursor:pointer;backdrop-filter:blur(8px);}
+.mbtn svg{width:20px;height:20px;fill:none;stroke:var(--g);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
+html[data-theme="dark"] .mbtn svg{stroke:var(--gm);}
+.mbtn.loc{top:14px;right:14px;}
+.fab{position:absolute;bottom:calc(104px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
+ background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;border:none;border-radius:30px;
+ padding:16px 26px;font-family:var(--fh);font-size:15px;font-weight:600;display:flex;align-items:center;
+ gap:10px;cursor:pointer;box-shadow:0 8px 26px rgba(26,122,52,.45);z-index:5;white-space:nowrap;
+ transition:transform .14s;}
+.fab:active{transform:translateX(-50%) scale(.95);}
+.fab svg{width:18px;height:18px;fill:#fff;}
+.pinm{display:flex;flex-direction:column;align-items:center;cursor:pointer;
+ animation:pd .35s cubic-bezier(.34,1.56,.64,1) both;}
+@keyframes pd{from{transform:translateY(-16px);opacity:0}to{transform:translateY(0);opacity:1}}
+.pinm .ph{width:36px;height:36px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);
+ background:linear-gradient(135deg,var(--gm),var(--gd));display:flex;align-items:center;justify-content:center;
+ box-shadow:0 3px 10px rgba(0,0,0,.3);border:2.5px solid #fff;}
+.pinm .ph i{transform:rotate(45deg);display:flex;}
+.pinm .ph svg{width:17px;height:17px;fill:#fff;}
+
+/* traka sa brojevima — ISPOD zaglavlja, ne preko donjeg menija */
+.sstrip{display:flex;background:var(--card);flex-shrink:0;border-bottom:1px solid var(--sep2);}
+.sc{flex:1;padding:10px 4px;text-align:center;border-right:1px solid var(--sep2);}
+.sc:last-child{border-right:none;}
+.sc .sn{font-family:var(--fh);font-size:18px;font-weight:700;letter-spacing:-.5px;color:var(--g);}
+html[data-theme="dark"] .sc .sn{color:var(--gm);}
+.sc .sl{font-size:9.5px;color:var(--tx3);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+
+/* ══ FEED ══ */
+.frow{display:flex;gap:8px;padding:8px 18px 12px;overflow-x:auto;flex-shrink:0;}
+.frow::-webkit-scrollbar{display:none;}
+.fch{padding:9px 15px;border-radius:20px;font-family:var(--fh);font-size:12.5px;font-weight:600;
+ border:1.5px solid var(--sep);white-space:nowrap;cursor:pointer;background:var(--card);color:var(--tx2);
+ flex-shrink:0;display:flex;align-items:center;gap:7px;}
+.fch svg{width:15px;height:15px;fill:var(--g);}
+html[data-theme="dark"] .fch svg{fill:var(--gm);}
+.fch.on{background:var(--g);color:#fff;border-color:var(--g);}
+.fch.on svg{fill:#fff;}
+html[data-theme="dark"] .fch.on svg{fill:#fff;}
+.flist{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
+ padding:2px 18px calc(120px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:11px;}
+.flist::-webkit-scrollbar{display:none;}
+.flist>*{flex-shrink:0;}
+.fcd{background:var(--card);border-radius:var(--rl);padding:15px;border:1px solid var(--sep2);
+ box-shadow:0 1px 6px var(--shad);}
+.fct{display:flex;gap:13px;align-items:flex-start;margin-bottom:12px;cursor:pointer;}
+.fcd .ico{width:50px;height:50px;}
+.fcd .ico svg{width:25px;height:25px;}
+.fti{font-family:var(--fh);font-size:15.5px;font-weight:600;letter-spacing:-.2px;line-height:1.3;color:var(--tx);}
+.fad{font-size:11.5px;color:var(--tx3);margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;}
+.mc{background:var(--bg);border-radius:7px;padding:3px 8px;font-weight:600;color:var(--tx2);
+ display:inline-flex;align-items:center;gap:5px;}
+.mc svg{width:12px;height:12px;fill:var(--tx3);}
+.fbo{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.org{font-size:12.5px;color:var(--tx3);display:flex;align-items:center;gap:8px;min-width:0;}
+.ava{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;}
+.org .ava{width:25px;height:25px;font-size:10.5px;}
+.jbtn{display:flex;align-items:center;gap:6px;font-family:var(--fh);font-size:13px;font-weight:600;
+ cursor:pointer;padding:9px 15px;border-radius:12px;border:1.5px solid var(--g);background:var(--card);
+ color:var(--g);white-space:nowrap;flex-shrink:0;transition:transform .14s;}
+.jbtn:active{transform:scale(.94);}
+.jbtn svg{width:14px;height:14px;fill:var(--g);}
+.jbtn.jd{background:var(--g);color:#fff;}
+.jbtn.jd svg{fill:#fff;}
+html[data-theme="dark"] .jbtn{border-color:var(--gm);color:var(--gm);}
+html[data-theme="dark"] .jbtn svg{fill:var(--gm);}
+html[data-theme="dark"] .jbtn.jd{background:var(--g);color:#fff;}
+html[data-theme="dark"] .jbtn.jd svg{fill:#fff;}
+.goers{display:flex;align-items:center;margin-top:12px;}
+.goers .ava{width:26px;height:26px;font-size:9.5px;border:2px solid var(--card);margin-left:-7px;}
+.goers .ava:first-child{margin-left:0;}
+.goers .cnt{font-size:12px;color:var(--tx3);margin-left:10px;font-weight:600;}
+
+/* ══ BLOCKS ══ */
+.npb{background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;border-radius:var(--rl);
+ padding:19px;box-shadow:0 8px 22px rgba(26,122,52,.26);}
+.npb h3{font-family:var(--fh);font-size:16px;font-weight:600;display:flex;align-items:center;gap:10px;}
+.npb h3 svg{width:20px;height:20px;fill:#fff;flex-shrink:0;}
+.npb p{font-size:13px;line-height:1.6;margin-top:9px;opacity:.95;}
+.nptags{display:flex;gap:7px;margin-top:13px;flex-wrap:wrap;}
+.nptag{background:rgba(255,255,255,.18);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;
+ display:inline-flex;align-items:center;gap:5px;}
+.nptag svg{width:12px;height:12px;fill:#fff;}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+.scard{background:var(--card);border-radius:var(--rl);padding:16px;border:1px solid var(--sep2);
+ box-shadow:0 1px 6px var(--shad);}
+.scard .v{font-family:var(--fh);font-size:26px;font-weight:700;letter-spacing:-1px;color:var(--g);}
+html[data-theme="dark"] .scard .v{color:var(--gm);}
+.scard .l{font-size:11.5px;color:var(--tx3);margin-top:3px;font-weight:600;}
+.blk{background:var(--card);border-radius:var(--rl);border:1px solid var(--sep2);overflow:hidden;
+ box-shadow:0 1px 6px var(--shad);}
+.blkh{padding:15px 16px 12px;font-family:var(--fh);font-size:14.5px;font-weight:600;
+ border-bottom:1px solid var(--sep2);display:flex;justify-content:space-between;align-items:center;
+ gap:10px;color:var(--tx);}
+.blkh span{font-family:var(--fn);font-size:11.5px;font-weight:600;color:var(--tx3);flex-shrink:0;}
+.row{display:flex;align-items:center;gap:13px;padding:13px 16px;border-bottom:1px solid var(--sep2);}
+.row:last-child{border-bottom:none;}
+.row .ava{width:36px;height:36px;font-size:13px;}
+.row .ico{width:36px;height:36px;border-radius:11px;}
+.row .ico svg{width:19px;height:19px;}
+.row .rn{flex:1;font-size:14px;font-weight:600;color:var(--tx);min-width:0;}
+.row .rd{font-size:11.5px;color:var(--tx3);flex-shrink:0;}
+.pad{padding:15px 16px;font-size:13.5px;color:var(--tx2);line-height:1.6;}
+.chips{display:flex;flex-wrap:wrap;gap:8px;}
+.chip{background:var(--gl);color:var(--gd);border-radius:9px;padding:7px 11px;font-size:12.5px;
+ font-weight:600;display:flex;align-items:center;gap:8px;}
+html[data-theme="dark"] .chip{color:#c9e8d4;}
+.chip b{cursor:pointer;opacity:.6;font-weight:700;font-size:13px;}
+.segbtn{display:flex;border:1.5px solid var(--sep);border-radius:12px;overflow:hidden;background:var(--bg);
+ cursor:pointer;flex-shrink:0;}
+.segbtn span{padding:8px 16px;font-size:12.5px;font-weight:700;color:var(--tx3);transition:all .18s;user-select:none;}
+.segbtn span.on{background:var(--g);color:#fff;}
+.setrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 16px;
+ border-bottom:1px solid var(--sep2);font-size:14.5px;font-weight:600;color:var(--tx);}
+.setrow:last-child{border-bottom:none;}
+
+/* ══ BOTTOM NAV ══ */
+.bnav{position:absolute;left:0;right:0;bottom:0;margin:0 14px calc(16px + env(safe-area-inset-bottom));
+ padding:9px 8px;background:var(--card);border-radius:28px;
+ box-shadow:0 12px 34px rgba(15,25,45,.2),0 3px 10px rgba(15,25,45,.1);
+ display:none;align-items:center;justify-content:space-around;z-index:20;
+ border:1px solid var(--sep2);}
+.nav-ind{position:absolute;top:50%;left:0;width:50px;height:50px;border-radius:50%;
+ background:linear-gradient(135deg,var(--gm),var(--gd));box-shadow:0 8px 18px rgba(26,122,52,.4);
+ transform:translate(-50%,-50%);z-index:0;pointer-events:none;
+ transition:left .44s cubic-bezier(.34,1.56,.64,1);}
+.nbtn{position:relative;z-index:1;flex:1;display:flex;align-items:center;justify-content:center;
+ padding:13px 0;background:none;border:none;cursor:pointer;
+ transition:transform .18s cubic-bezier(.34,1.56,.64,1);}
+.nbtn svg{fill:#9aa1ad;width:24px;height:24px;transition:fill .3s;}
+html[data-theme="dark"] .nbtn svg{fill:#6f7681;}
+.nbtn.on svg{fill:#fff;}
+html[data-theme="dark"] .nbtn.on svg{fill:#fff;}
+.nbtn.on{transform:translateY(-2px);}
+.nbtn:active{transform:scale(.85);}
+.nbw{position:relative;display:flex;}
+.nbadge{position:absolute;top:-6px;right:-10px;background:var(--r);color:#fff;font-size:9.5px;
+ font-weight:800;min-width:17px;height:17px;border-radius:9px;display:flex;align-items:center;
+ justify-content:center;padding:0 4px;border:2px solid var(--card);z-index:2;}
+
+/* ══ SHEETS ══ */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:60;display:none;flex-direction:column;
+ justify-content:flex-end;backdrop-filter:blur(2px);}
+.ov.on{display:flex;animation:fi .18s ease;}
+@keyframes fi{from{opacity:0}to{opacity:1}}
+.sh{background:var(--card);border-radius:26px 26px 0 0;
+ padding:0 18px calc(24px + env(safe-area-inset-bottom));max-height:88vh;overflow-y:auto;
+ -webkit-overflow-scrolling:touch;animation:su .3s cubic-bezier(.32,.72,0,1);}
+.sh::-webkit-scrollbar{display:none;}
+@keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.shdl{width:38px;height:4px;background:var(--sep);border-radius:2px;margin:12px auto 17px;}
+.shh{margin-bottom:15px;}
+.shh h3{font-family:var(--fh);font-size:19.5px;font-weight:700;letter-spacing:-.4px;color:var(--tx);line-height:1.25;}
+.shh p{font-size:13px;color:var(--tx3);margin-top:4px;}
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:15px;}
+.cc{border:1.5px solid var(--sep);border-radius:16px;padding:12px;cursor:pointer;background:var(--bg);
+ display:flex;align-items:center;gap:11px;
+ transition:transform .16s cubic-bezier(.34,1.56,.64,1),border-color .2s,background .2s;}
+.cc:active{transform:scale(.94);}
+.cc.sel{border-color:var(--g);background:var(--gl);}
+.cc .ico{width:36px;height:36px;border-radius:11px;background:var(--card);}
+.cc.sel .ico{background:#fff;}
+.cc .ico svg{width:19px;height:19px;}
+.cc .cn2{font-family:var(--fh);font-size:12px;font-weight:600;line-height:1.2;color:var(--tx);}
+
+/* ══ WIZARD ══ */
+.steps{display:flex;gap:6px;padding:14px 18px 0;flex-shrink:0;}
+.stp{flex:1;height:4px;border-radius:2px;background:var(--sep);}
+.stp.on{background:var(--g);}
+.wbody{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
+ padding:18px 18px calc(28px + env(safe-area-inset-bottom));}
+.wbody::-webkit-scrollbar{display:none;}
+.wtit{font-family:var(--fh);font-size:23px;font-weight:700;letter-spacing:-.6px;color:var(--tx);}
+.wsub{font-size:13.5px;color:var(--tx3);margin-top:7px;line-height:1.6;margin-bottom:18px;}
+.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.tc{border:1.5px solid var(--sep);border-radius:16px;padding:13px;cursor:pointer;background:var(--card);
+ display:flex;align-items:center;gap:12px;transition:transform .14s,border-color .18s,background .18s;}
+.tc:active{transform:scale(.95);}
+.tc.sel{border-color:var(--g);background:var(--gl);}
+.tc .ico{width:36px;height:36px;border-radius:11px;background:var(--bg);}
+.tc.sel .ico{background:#fff;}
+.tc .ico svg{width:20px;height:20px;}
+.tc .n{font-family:var(--fh);font-size:13px;font-weight:600;line-height:1.2;color:var(--tx);}
+.tc .d{font-size:10px;color:var(--tx3);margin-top:2px;}
+.cmapbox{height:280px;border-radius:var(--rl);overflow:hidden;position:relative;border:1.5px solid var(--sep);
+ background:var(--gl);}
+.xhair{position:absolute;top:50%;left:50%;transform:translate(-50%,-100%);z-index:4;pointer-events:none;
+ filter:drop-shadow(0 3px 5px rgba(0,0,0,.35));}
+.xhair svg{width:34px;height:34px;fill:var(--g);}
+.mhint{position:absolute;bottom:8px;left:8px;right:8px;z-index:4;background:rgba(0,0,0,.75);color:#fff;
+ font-size:11.5px;font-weight:600;padding:9px 11px;border-radius:11px;text-align:center;pointer-events:none;}
+.rrow{display:flex;align-items:center;justify-content:space-between;margin:20px 0 9px;}
+.rrow .rl{font-family:var(--fh);font-size:13.5px;font-weight:600;color:var(--tx);}
+.rrow .rv{font-family:var(--fh);font-size:15px;font-weight:700;color:var(--g);}
+html[data-theme="dark"] .rrow .rv{color:var(--gm);}
+input[type=range]{width:100%;-webkit-appearance:none;height:6px;border-radius:3px;
+ background:linear-gradient(90deg,var(--g) var(--p,40%),var(--sep) var(--p,40%));outline:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:50%;
+ background:#fff;border:3px solid var(--g);box-shadow:0 2px 7px rgba(0,0,0,.25);cursor:pointer;}
+input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#fff;
+ border:3px solid var(--g);cursor:pointer;}
+.presets{display:flex;gap:6px;margin-top:13px;flex-wrap:wrap;}
+.pz{padding:8px 12px;border-radius:10px;border:1.5px solid var(--sep);background:var(--card);
+ font-family:var(--fh);font-size:11px;font-weight:600;color:var(--tx2);cursor:pointer;}
+.pz.on{background:var(--g);color:#fff;border-color:var(--g);}
+.geores{background:var(--card);border:1.5px solid var(--sep);border-radius:var(--rm);margin-top:-9px;
+ margin-bottom:15px;overflow:hidden;display:none;}
+.geores.on{display:block;}
+.gr{padding:13px 14px;font-size:13px;border-bottom:1px solid var(--sep2);cursor:pointer;line-height:1.4;color:var(--tx);}
+.gr:last-child{border-bottom:none;}
+.gr:active{background:var(--gl);}
+
+/* ══ DETAIL ══ */
+.dsec{margin-bottom:17px;}
+.dsec h4{font-size:11px;font-weight:800;color:var(--tx3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:11px;}
+.dmrow{display:flex;align-items:center;gap:12px;font-size:14.5px;padding:6px 0;color:var(--tx);}
+.dmrow svg{width:18px;height:18px;fill:var(--g);flex-shrink:0;}
+html[data-theme="dark"] .dmrow svg{fill:var(--gm);}
+.cmt{display:flex;gap:11px;padding:11px 0;border-bottom:1px solid var(--sep2);}
+.cmt:last-child{border-bottom:none;}
+.cmt .ava{width:33px;height:33px;font-size:12px;}
+.cmt .cn3{font-size:13px;font-weight:700;color:var(--tx);}
+.cmt .ct{font-size:13.5px;color:var(--tx2);margin-top:2px;line-height:1.45;}
+.cmt .cw{font-size:10.5px;color:var(--tx3);margin-top:4px;}
+.cbox{display:flex;gap:8px;margin-top:12px;}
+.cbox input{flex:1;border:1.5px solid var(--sep);border-radius:13px;padding:12px 14px;font-size:15px;
+ outline:none;background:var(--bg);color:var(--tx);}
+.cbox input:focus{border-color:var(--g);background:var(--card);}
+.cbox button{border:none;background:var(--g);color:#fff;border-radius:13px;padding:0 14px;cursor:pointer;
+ display:flex;align-items:center;justify-content:center;}
+.cbox button svg{width:19px;height:19px;fill:#fff;}
+
+/* ══ SUCCESS ══ */
+.succ{text-align:center;padding:12px 0 4px;}
+.succ .ic{width:74px;height:74px;border-radius:50%;background:var(--gl);display:flex;align-items:center;
+ justify-content:center;margin:0 auto 16px;}
+.succ .ic svg{width:36px;height:36px;fill:var(--g);}
+html[data-theme="dark"] .succ .ic svg{fill:var(--gm);}
+.succ h3{font-family:var(--fh);font-size:22px;font-weight:700;letter-spacing:-.5px;margin-bottom:8px;color:var(--tx);}
+.succ p{font-size:14px;color:var(--tx3);margin-bottom:18px;line-height:1.6;}
+
+.toast{position:fixed;left:50%;bottom:calc(108px + env(safe-area-inset-bottom));
+ transform:translateX(-50%) translateY(16px);background:rgba(20,20,22,.96);color:#fff;padding:13px 19px;
+ border-radius:22px;font-size:13.5px;font-weight:600;z-index:90;opacity:0;transition:all .22s;
+ backdrop-filter:blur(10px);max-width:88%;text-align:center;pointer-events:none;}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+.spin{width:19px;height:19px;border:2.5px solid rgba(255,255,255,.35);border-top-color:#fff;
+ border-radius:50%;animation:sp .7s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div id="splash" aria-hidden="true">
+  <div class="sp-wrap">
+    <div class="sp-pinbox">
+      <span class="sp-ring"></span>
+      <svg class="sp-pin" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C8.1 2 5 5.1 5 9c0 5 7 13 7 13s7-8 7-13c0-3.9-3.1-7-7-7Zm0 9.6A2.6 2.6 0 1 1 12 6.4a2.6 2.6 0 0 1 0 5.2Z"/></svg>
+    </div>
+    <div class="sp-word">PINIT</div>
+  </div>
+  <div class="sp-sub">ZAJEDNICA</div>
+</div>
+
+<div class="app">
+
+<!-- ═══ PRIJAVA ═══ -->
+<div class="scr on" id="sauth">
+  <div class="hero">
+    <div class="logo"><svg viewBox="0 0 24 24"><path d="M12 3 2 12h3v9h6v-6h2v6h6v-9h3z"/></svg></div>
+    <div class="h1">Komšiluk<br>na jednom mjestu</div>
+    <div class="h1s">Napravi zajednicu za svoj kvart ili selo, ili se učlani u postojeću. Dogovarajte utakmice, roštilje, radne akcije — ili tražite pomoć kad zatreba.</div>
+    <div class="free" id="freeBadge"></div>
+    <div style="flex:1;min-height:26px"></div>
+    <div class="fld"><label>Kako se zoveš</label>
+      <input class="inp" id="a_name" placeholder="npr. Amir D." autocomplete="name" maxlength="60"></div>
+    <button class="abtn pr" id="a_btn" onclick="doAuth()">Uđi</button>
+    <div class="note" id="authNote" style="margin-top:15px"></div>
+  </div>
+</div>
+
+<!-- ═══ IZBOR ZAJEDNICE ═══ -->
+<div class="scr" id="spick">
+  <div class="top">
+    <div class="tl"><div class="brand">PINIT ZAJEDNICA</div><h2>Zajednice u blizini</h2></div>
+  </div>
+  <div class="hero" style="padding-top:14px">
+    <p id="pk_s" style="font-size:12.5px;color:var(--tx3);margin-bottom:15px">Tražim tvoju lokaciju…</p>
+    <div id="pk_list" class="clist"></div>
+    <div style="height:18px"></div>
+    <button class="abtn pr" id="mkBtn" onclick="startCreate()">Napravi novu zajednicu</button>
+    <div style="height:9px"></div>
+    <button class="abtn gh" onclick="loadCommunities()">Osvježi listu</button>
+    <div style="flex:1;min-height:14px"></div>
+    <button class="abtn gh" onclick="logout()">Odjavi se</button>
+  </div>
+</div>
+
+<!-- ═══ ČAROBNJAK ═══ -->
+<div class="scr" id="screate">
+  <div class="top">
+    <button class="tbtn" onclick="cancelCreate()">Odustani</button>
+    <div class="tl" style="text-align:center"><h2 style="font-size:17px">Nova zajednica</h2></div>
+    <div style="width:78px;flex-shrink:0"></div>
+  </div>
+  <div class="steps"><div class="stp on" id="stp1"></div><div class="stp" id="stp2"></div><div class="stp" id="stp3"></div></div>
+
+  <div class="wbody" id="w1">
+    <div class="wtit">Šta pravimo?</div>
+    <div class="wsub">Odaberi veličinu — to samo predloži prečnik, možeš ga poslije mijenjati.</div>
+    <div class="tgrid" id="tgrid"></div>
+    <div class="fld" style="margin-top:20px"><label>Naziv zajednice</label>
+      <input class="inp" id="c_name" placeholder="npr. Naselje Otoka" maxlength="60" oninput="chk1()"></div>
+    <div class="fld"><label>Kratak opis (opciono)</label>
+      <textarea class="inp" id="c_desc" rows="2" placeholder="npr. Zgrade A, B i C i sve oko igrališta." maxlength="500"></textarea></div>
+    <button class="abtn pr" id="w1btn" disabled onclick="goStep(2)">Dalje — područje</button>
+  </div>
+
+  <div class="wbody" id="w2" style="display:none">
+    <div class="wtit">Koje područje pokriva?</div>
+    <div class="wsub">Namjesti kartu da je oznaka na sredini tvog kvarta, pa klizačem podesi dokle seže. Zeleni krug je zona zajednice.</div>
+    <div class="fld"><label>Pronađi mjesto</label>
+      <input class="inp" id="c_geo" placeholder="npr. Tešanj, Otoka, Grbavica…" oninput="geoSearch()"></div>
+    <div class="geores" id="c_geores"></div>
+    <div class="cmapbox">
+      <div id="cmap"></div>
+      <div class="xhair" id="xhair"><svg viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C8.1 2 5 5.1 5 9c0 5 7 13 7 13s7-8 7-13c0-3.9-3.1-7-7-7Zm0 9.6A2.6 2.6 0 1 1 12 6.4a2.6 2.6 0 0 1 0 5.2Z"/></svg></div>
+      <button class="mbtn loc" onclick="myLoc()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
+      <div class="mhint" id="c_hint">Pomjeraj kartu da namjestiš centar</div>
+    </div>
+    <div class="rrow"><span class="rl">Prečnik zone</span><span class="rv" id="c_rv">800 m</span></div>
+    <input type="range" id="c_rad" min="150" max="8000" step="50" value="800" oninput="setRad(this.value)">
+    <div class="presets" id="presets"></div>
+    <div class="note" id="c_zone" style="margin-top:14px"></div>
+    <div class="two" style="margin-top:18px">
+      <button class="abtn se" onclick="goStep(1)">Nazad</button>
+      <button class="abtn pr" onclick="goStep(3)">Dalje — ulice</button>
+    </div>
+  </div>
+
+  <div class="wbody" id="w3" style="display:none">
+    <div class="wtit">Koje ulice spadaju?</div>
+    <div class="wsub">Samo spisak radi prepoznavanja — da komšija vidi svoju ulicu i zna da je to njegova zajednica. Granica ostaje krug iz prošlog koraka. Možeš i preskočiti.</div>
+    <div class="fld"><label>Dodaj ulicu ili zaselak</label>
+      <div style="display:flex;gap:9px">
+        <input class="inp" id="c_street" placeholder="npr. Ferhadija" maxlength="60"
+               onkeydown="if(event.key==='Enter'){event.preventDefault();addStreet();}">
+        <button class="abtn pr" style="width:auto;padding:0 20px" onclick="addStreet()" id="addStBtn"></button>
+      </div></div>
+    <div class="chips" id="c_chips"></div>
+    <div class="note" id="w3note" style="margin-top:20px"></div>
+    <div class="two" style="margin-top:18px">
+      <button class="abtn se" onclick="goStep(2)">Nazad</button>
+      <button class="abtn pr" id="w3btn" onclick="createCom()">Napravi zajednicu</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MAPA ═══ -->
+<div class="scr" id="smap">
+  <div class="top">
+    <div class="tl"><div class="brand">PINIT ZAJEDNICA</div><h2 id="m_h">—</h2></div>
+    <button class="tbtn" onclick="goScr('spick')" id="switchBtn"><b>Promijeni</b></button>
+  </div>
+  <div class="sstrip">
+    <div class="sc"><div class="sn" id="k_today">0</div><div class="sl">Danas</div></div>
+    <div class="sc"><div class="sn" id="k_all">0</div><div class="sl">Dešavanja</div></div>
+    <div class="sc"><div class="sn" id="k_mem">0</div><div class="sl">Članova</div></div>
+    <div class="sc"><div class="sn" id="k_go">0</div><div class="sl">Pridruženih</div></div>
+  </div>
+  <div class="mapwrap">
+    <div id="map"></div>
+    <button class="mbtn loc" onclick="mapLoc()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
+    <button class="fab" onclick="openCreateEv()" id="fabBtn"></button>
+  </div>
+</div>
+
+<!-- ═══ DEŠAVANJA ═══ -->
+<div class="scr" id="sfeed">
+  <div class="shdr"><h2>Dešavanja</h2><p id="f_s">—</p></div>
+  <div class="frow" id="frow"></div>
+  <div class="flist" id="flist"></div>
+</div>
+
+<!-- ═══ ZAJEDNICA ═══ -->
+<div class="scr" id="scom">
+  <div class="shdr"><h2 id="c_h">Zajednica</h2><p id="c_s2">—</p></div>
+  <div class="body" id="c_body"></div>
+</div>
+
+<!-- ═══ PROFIL ═══ -->
+<div class="scr" id="sprof">
+  <div class="shdr"><h2>Profil</h2><p id="p_s">—</p></div>
+  <div class="body" id="p_body"></div>
+</div>
+
+<div class="bnav" id="bnav">
+  <span class="nav-ind" id="navInd"></span>
+  <button class="nbtn on" data-s="smap" onclick="goScr('smap',this)" aria-label="Mapa"><svg viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C8.1 2 5 5.1 5 9c0 5 7 13 7 13s7-8 7-13c0-3.9-3.1-7-7-7Zm0 9.6A2.6 2.6 0 1 1 12 6.4a2.6 2.6 0 0 1 0 5.2Z"/></svg></button>
+  <button class="nbtn" data-s="sfeed" onclick="goScr('sfeed',this)" aria-label="Dešavanja"><div class="nbw"><svg viewBox="0 0 24 24"><path d="M4 5h16v2.4H4zm0 5.8h16v2.4H4zm0 5.8h11v2.4H4z"/></svg><div class="nbadge" id="nbg">0</div></div></button>
+  <button class="nbtn" data-s="scom" onclick="goScr('scom',this)" aria-label="Zajednica"><svg viewBox="0 0 24 24"><path d="M9 12.5a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2Zm8.2 0a3.1 3.1 0 1 0 0-6.2 3.1 3.1 0 0 0 0 6.2ZM9 14.3c-3 0-7 1.5-7 3.7V21h14v-3c0-2.2-4-3.7-7-3.7Zm8.6 0c-.6 0-1.3.1-1.9.2 1.3.9 2.3 2 2.3 3.5v3H23v-2.9c0-2.2-3-3.8-5.4-3.8Z"/></svg></button>
+  <button class="nbtn" data-s="sprof" onclick="goScr('sprof',this)" aria-label="Profil"><svg viewBox="0 0 24 24"><path d="M12 12.2a4.6 4.6 0 1 0 0-9.2 4.6 4.6 0 0 0 0 9.2Zm0 2c-4.4 0-8.4 2.2-8.4 5V21h16.8v-1.8c0-2.8-4-5-8.4-5Z"/></svg></button>
+</div>
+</div>
+
+<div class="ov" id="ov_ev" onclick="ovc(event,'ov_ev')"><div class="sh"><div class="shdl"></div><div id="ev_body"></div></div></div>
+<div class="ov" id="ov_new" onclick="ovc(event,'ov_new')"><div class="sh"><div class="shdl"></div>
+  <div class="shh"><h3>Šta pokrećeš?</h3><p id="nw_p">—</p></div>
+  <div class="cgrid" id="nw_cats"></div>
+  <div class="fld"><label>Naziv</label><input class="inp" id="nw_title" placeholder="npr. Gledanje finala u dvorištu" maxlength="120" oninput="chkNew()"></div>
+  <div class="two">
+    <div class="fld"><label>Kad</label><input class="inp" id="nw_day" placeholder="Danas / subota" maxlength="40"></div>
+    <div class="fld"><label>Sati</label><input class="inp" id="nw_time" placeholder="20:00" maxlength="20"></div>
+  </div>
+  <div class="fld"><label>Gdje</label><input class="inp" id="nw_place" placeholder="npr. dvorište zgrade C" maxlength="80"></div>
+  <div class="fld"><label>Detalji (opciono)</label><textarea class="inp" id="nw_note" rows="2" placeholder="Ponesi stolicu, ima projektor…" maxlength="600"></textarea></div>
+  <button class="abtn pr" id="nw_btn" disabled onclick="publishEv()">Objavi u zajednici</button>
+</div></div>
+<div class="ov" id="ov_ok"><div class="sh"><div class="shdl"></div><div class="succ" id="ok_body"></div></div></div>
+
+<div class="toast" id="toast"></div>
+<script>
+"use strict";
+var API = location.origin;
+
+/* ═══════════════════════════════════════════════════
+   ILUSTRACIJE (SVG) — nema emoji nigdje u aplikaciji.
+   Sve se crta zelenom bojom preko currentColor/fill.
+   ═══════════════════════════════════════════════════ */
+var ICONS = {
+  /* vrste zajednice */
+  ulica:   '<path d="M12 3 2 12h3v9h6v-6h2v6h6v-9h3z"/>',
+  kvart:   '<path d="M2 21V11.5L7 8l5 3.5V21zm11 0V7.5L17.5 4 22 7.5V21zM4.5 18.6h2v-2.4h-2zm0-4.2h2V12h-2zm10.9 4.2h2.1v-2.4h-2.1zm0-4.2h2.1V12h-2.1z"/>',
+  naselje: '<path d="M2 21V13h5V9h5V4h10v17zM4.5 18.6h2.2v-3H4.5zm7-6.1h2.2v-3h-2.2zm0 6.1h2.2v-3h-2.2zm5.8 0h2.2v-3h-2.2zm0-6.1h2.2v-3h-2.2zm0-6h2.2v-3h-2.2z"/>',
+  selo:    '<path d="M1.5 20.5 8 9.4l3.4 5.8 2.2-3.6 6.9 8.9zM17 2l1.1 2.5L20.6 6l-2.5 1.1L17 9.6l-1.1-2.5L13.4 6l2.5-1.1z"/>',
+  opstina: '<path d="M15 3.9 9 2 3 4.1v18l6-2.1 6 1.9 6-2.1v-18zm-6.4.9 4.8 1.5v14.4L8.6 19.2z"/>',
+  /* kategorije desavanja */
+  utakmica:'<path fill-rule="evenodd" d="M12 1.8a10.2 10.2 0 1 0 0 20.4 10.2 10.2 0 0 0 0-20.4Zm0 4.9 4.3 3.1-1.6 5.1H9.3L7.7 9.8Z"/>',
+  druzenje:'<path d="M12 1.7s5.6 4.6 5.6 9.6a5.6 5.6 0 0 1-11.2 0c0-1.9.7-3.5 1.7-4.9.3 1.2 1 2.1 1.9 2.6C10.2 6.6 12 4.3 12 1.7Z"/><path d="M4 20.4h16v2H4z"/>',
+  akcija:  '<path d="M11 2h2v7.6h3.1L18.4 19H5.6l2.3-9.4H11zM4.9 20.6h14.2V22H4.9z"/>',
+  pomoc:   '<path d="M12 2.2a1.35 1.35 0 0 0-1.35 1.35V9.6H10V4.9a1.35 1.35 0 1 0-2.7 0v7.4l-.9-1.5a1.45 1.45 0 0 0-2.5 1.45l3 5.4a6.2 6.2 0 0 0 5.35 3.1h1.3a5.6 5.6 0 0 0 5.6-5.6V7.6a1.35 1.35 0 0 0-2.7 0v2.9h-.7V4.9a1.35 1.35 0 0 0-2.7 0v5.6h-.6V3.55A1.35 1.35 0 0 0 12 2.2Z"/>',
+  pokloni: '<path d="M20 7.4h-2.4a3.1 3.1 0 0 0-4.5-4.1L12 4.4l-1.1-1.1A3.1 3.1 0 0 0 6.4 7.4H4a1 1 0 0 0-1 1v3.2h8V9.4h2v2.2h8V8.4a1 1 0 0 0-1-1ZM3 13.6V20a1 1 0 0 0 1 1h7v-7.4zm10 7.4h7a1 1 0 0 0 1-1v-6.4h-8z"/>',
+  djeca:   '<path d="M12 2a6.4 6.4 0 0 0-6.4 6.4c0 3.5 2.9 6.9 5.5 7.8l-.7 1.6h3.2l-.7-1.6c2.6-.9 5.5-4.3 5.5-7.8A6.4 6.4 0 0 0 12 2Zm-1.1 15.9c0 1.3 2.1 1.4 2.1 2.7V22h-2.1v-1.4c0-1.3-2.1-1.4-2.1-2.7z"/>',
+  inicijativa:'<path d="M4 9.2v5.6h3.1L16 19.6V4.4L7.1 9.2zm14.2-1.6v8.8a4.6 4.6 0 0 0 0-8.8z"/>',
+  ostalo:  '<path d="M20 2H4a2 2 0 0 0-2 2v16.6l4.3-4.2H20a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2Z"/>',
+  /* opsti znakovi */
+  pin:     '<path fill-rule="evenodd" d="M12 2C8.1 2 5 5.1 5 9c0 5 7 13 7 13s7-8 7-13c0-3.9-3.1-7-7-7Zm0 9.6A2.6 2.6 0 1 1 12 6.4a2.6 2.6 0 0 1 0 5.2Z"/>',
+  clock:   '<path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 9.4 4.1 2.4-1 1.7-5.1-3V5.9h2z"/>',
+  users:   '<path d="M9 12.5a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2Zm8.2 0a3.1 3.1 0 1 0 0-6.2 3.1 3.1 0 0 0 0 6.2ZM9 14.3c-3 0-7 1.5-7 3.7V21h14v-3c0-2.2-4-3.7-7-3.7Zm8.6 0c-.6 0-1.3.1-1.9.2 1.3.9 2.3 2 2.3 3.5v3H23v-2.9c0-2.2-3-3.8-5.4-3.8Z"/>',
+  person:  '<path d="M12 12.2a4.6 4.6 0 1 0 0-9.2 4.6 4.6 0 0 0 0 9.2Zm0 2c-4.4 0-8.4 2.2-8.4 5V21h16.8v-1.8c0-2.8-4-5-8.4-5Z"/>',
+  check:   '<path d="M9.2 16.4 4.9 12.1l-1.5 1.5 5.8 5.8L21 8.6l-1.5-1.5z"/>',
+  plus:    '<path d="M19.2 13.1h-6.1v6.1h-2.2v-6.1H4.8v-2.2h6.1V4.8h2.2v6.1h6.1z"/>',
+  link:    '<path d="M3.9 12A3.2 3.2 0 0 1 7.1 8.8h4.1V6.9H7.1a5.1 5.1 0 0 0 0 10.2h4.1v-1.9H7.1A3.2 3.2 0 0 1 3.9 12Zm4.2 1h7.8v-2H8.1zm8.8-6.1h-4.1v1.9h4.1a3.2 3.2 0 0 1 0 6.4h-4.1v1.9h4.1a5.1 5.1 0 0 0 0-10.2Z"/>',
+  heart:   '<path d="M12 20.8 4.2 13a4.75 4.75 0 1 1 6.7-6.7l1.1 1.1 1.1-1.1a4.75 4.75 0 1 1 6.7 6.7z"/>',
+  star:    '<path d="m12 2 3 6.4 6.9.9-5.1 4.8 1.3 6.9L12 17.6 5.9 21l1.3-6.9L2.1 9.3l6.9-.9z"/>',
+  map:     '<path d="M15 3.9 9 2 3 4.1v18l6-2.1 6 1.9 6-2.1v-18zm-6.4.9 4.8 1.5v14.4L8.6 19.2z"/>',
+  send:    '<path d="M2.5 21 22 12 2.5 3 2.5 10 16 12 2.5 14z"/>',
+  shield:  '<path d="M12 2 4 5.3v6.2c0 4.9 3.4 9.4 8 10.5 4.6-1.1 8-5.6 8-10.5V5.3zm-1 14.2-4-4 1.5-1.5 2.5 2.5 5-5L17.5 9.7z"/>',
+  swap:    '<path d="M7.5 6.8h9.1v2.9L21 5.4 16.6 1v2.9H4.6v5.8h2.9zm9 10.4h-9v-2.9L3 18.6 7.5 23v-2.9h11.9v-5.8h-2.9z"/>',
+  info:    '<path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 15h-2v-6h2zm0-8h-2V7h2z"/>',
+  trash:   '<path d="M6 20a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6zM19 4h-3.5l-1-1h-5l-1 1H5v2h14z"/>',
+  search:  '<path d="M15.5 14h-.8l-.3-.3a6.5 6.5 0 1 0-.7.7l.3.3v.8l5 5 1.5-1.5zm-6 0a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9Z"/>',
+  refresh: '<path d="M12 5V1L7 6l5 5V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7Z"/>'
+};
+function ic(name, size, cls){
+  var p = ICONS[name] || ICONS.ostalo;
+  return '<svg viewBox="0 0 24 24" width="' + (size || 24) + '" height="' + (size || 24) +
+         '" class="' + (cls || '') + '" aria-hidden="true">' + p + '</svg>';
+}
+function icoBox(name, size){ return '<span class="ico">' + ic(name, size || 24) + '</span>'; }
+
+/* ── tema ── */
+(function(){var t=null;try{t=localStorage.getItem('pinit_theme');}catch(e){}
+  if(!t)t=(window.matchMedia&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light';
+  document.documentElement.setAttribute('data-theme',t);})();
+function currentTheme(){return document.documentElement.getAttribute('data-theme')==='dark'?'dark':'light';}
+function applyTheme(t){document.documentElement.setAttribute('data-theme',t);
+  try{localStorage.setItem('pinit_theme',t);}catch(e){}
+  var m=document.querySelector('meta[name="theme-color"]');
+  if(m)m.setAttribute('content',t==='dark'?'#0b0d12':'#1a7a34');
+  var l=document.getElementById('segLight'),d=document.getElementById('segDark');
+  if(l)l.classList.toggle('on',t!=='dark');
+  if(d)d.classList.toggle('on',t==='dark');}
+function toggleTheme(){applyTheme(currentTheme()==='dark'?'light':'dark');}
+
+window.addEventListener('load',function(){setTimeout(function(){
+  var s=document.getElementById('splash');
+  if(s){s.classList.add('done');setTimeout(function(){s.style.display='none';},550);}
+},1750);});
+
+var TYPES=[
+  {id:'ulica',n:'Ulica',d:'jedna ulica',r:250},
+  {id:'kvart',n:'Kvart',d:'par zgrada ili ulica',r:800},
+  {id:'naselje',n:'Naselje',d:'veće naselje',r:1800},
+  {id:'selo',n:'Selo',d:'selo i zaseoci',r:3000},
+  {id:'opstina',n:'Opština',d:'cijela opština',r:8000}
+];
+var PRESETS=[{n:'Ulica',v:250},{n:'Kvart',v:800},{n:'Naselje',v:1800},{n:'Selo',v:3000},{n:'Opština',v:8000}];
+var CATS={
+  utakmica:{n:'Gledanje utakmice',v:'ide',j:'Idem',d:'Ideš'},
+  druzenje:{n:'Druženje i roštilj',v:'ide',j:'Idem',d:'Ideš'},
+  akcija:{n:'Radna akcija',v:'ide',j:'Idem',d:'Ideš'},
+  pomoc:{n:'Treba pomoć',v:'pomaže',j:'Pomažem',d:'Pomažeš'},
+  pokloni:{n:'Poklanjam ili dijelim',v:'zainteresovano',j:'Zanima me',d:'Zanima te'},
+  djeca:{n:'Za djecu',v:'ide',j:'Idem',d:'Ideš'},
+  inicijativa:{n:'Inicijativa',v:'podržava',j:'Podržavam',d:'Podržavaš'},
+  ostalo:{n:'Ostalo',v:'ide',j:'Idem',d:'Ideš'}
+};
+var AVC=[['#e6f2ea','#155f2a'],['#dff0e4','#176b30'],['#e8f1e6','#2c6b1f'],['#e4f0ef','#125f57'],
+         ['#eaf0e2','#3d6b16'],['#e2efe8','#0f5d33'],['#edf2e8','#33682a']];
+function avc(n){var h=0;n=String(n||'?');for(var i=0;i<n.length;i++)h=(h*31+n.charCodeAt(i))%AVC.length;return AVC[h];}
+function ini(n){return String(n||'?').trim().charAt(0).toUpperCase()||'?';}
+function ava(n,cls){var a=avc(n);return '<div class="ava '+(cls||'')+'" style="background:'+a[0]+';color:'+a[1]+'">'+ini(n)+'</div>';}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];});}
+function ago(t){var m=Math.floor((Date.now()-t)/60000);if(m<1)return 'sad';if(m<60)return m+' min';if(m<1440)return Math.floor(m/60)+' h';return Math.floor(m/1440)+' d';}
+function km(m){return m>=1000?(m/1000).toFixed(m>=10000?0:1)+' km':m+' m';}
+
+var ME=null,COM=null,COMS=[],EVENTS=[],GPS=null,filt='all';
+try{ME=JSON.parse(localStorage.getItem('pz_me'));}catch(e){}
+function saveMe(){try{localStorage.setItem('pz_me',JSON.stringify(ME));}catch(e){}}
+function saveComId(){try{localStorage.setItem('pz_com',COM?COM.id:'');}catch(e){}}
+
+function api(path,opts){opts=opts||{};
+  var o={method:opts.method||'GET',headers:{'Content-Type':'application/json'}};
+  if(opts.body)o.body=JSON.stringify(opts.body);
+  return fetch(API+path,o).then(function(r){
+    return r.json().catch(function(){return{};}).then(function(j){
+      if(!r.ok)throw new Error(j.error||('greška '+r.status));return j;});});}
+var tt;function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('on');
+  clearTimeout(tt);tt=setTimeout(function(){t.classList.remove('on');},2400);}
+function busy(btn,on,html){if(!btn)return;
+  if(on){btn.dataset.t=btn.innerHTML;btn.disabled=true;btn.innerHTML='<div class="spin"></div>';}
+  else{btn.disabled=false;btn.innerHTML=html||btn.dataset.t||'OK';}}
+
+function goScr(id,btn){
+  var el=document.getElementById(id);if(!el)return;
+  document.querySelectorAll('.scr').forEach(function(s){s.classList.remove('on');});
+  el.classList.add('on');
+  var main=['smap','sfeed','scom','sprof'].indexOf(id)>=0;
+  document.getElementById('bnav').style.display=main?'flex':'none';
+  if(main){
+    if(!btn)btn=document.querySelector('.nbtn[data-s="'+id+'"]');
+    document.querySelectorAll('.nbtn').forEach(function(b){b.classList.remove('on');});
+    if(btn)btn.classList.add('on');
+    moveInd();
+  }
+  if(id==='spick')loadCommunities();
+  if(id==='smap')setTimeout(function(){if(MAP)MAP.resize();drawMap();moveInd();},60);
+  if(id==='scom')renderCom();
+  if(id==='sprof')renderProf();
+}
+function moveInd(){var on=document.querySelector('.nbtn.on'),ind=document.getElementById('navInd');
+  if(!on||!ind)return;ind.style.left=(on.offsetLeft+on.offsetWidth/2)+'px';}
+window.addEventListener('resize',moveInd);
+function ovc(e,id){if(e.target.id===id)document.getElementById(id).classList.remove('on');}
+
+/* ── prijava ── */
+function doAuth(){var n=document.getElementById('a_name').value.trim();
+  if(n.length<2)return toast('Upiši svoje ime.');
+  var b=document.getElementById('a_btn');busy(b,true);
+  api('/api/register',{method:'POST',body:{name:n}}).then(function(r){
+    ME={id:r.userId,token:r.token,name:n};saveMe();busy(b,false,'Uđi');goScr('spick');
+  }).catch(function(e){busy(b,false,'Uđi');toast(e.message);});}
+function logout(){ME=null;COM=null;
+  try{localStorage.removeItem('pz_me');localStorage.removeItem('pz_com');}catch(e){}
+  goScr('sauth');}
+
+function getGPS(){return new Promise(function(res){
+  if(!navigator.geolocation)return res(null);
+  navigator.geolocation.getCurrentPosition(
+    function(p){GPS={lat:p.coords.latitude,lng:p.coords.longitude};res(GPS);},
+    function(){res(null);},{enableHighAccuracy:true,timeout:8000,maximumAge:60000});});}
+
+/* ── izbor zajednice ── */
+function loadCommunities(){var box=document.getElementById('pk_list');
+  box.innerHTML='<div class="empty">Učitavam…</div>';
+  getGPS().then(function(g){
+    document.getElementById('pk_s').textContent=g?'Sortirano po udaljenosti od tebe':'GPS nije dostupan — prikazujem sve';
+    var q='/api/communities?token='+encodeURIComponent(ME?ME.token:'');
+    if(g)q+='&lat='+g.lat+'&lng='+g.lng;return api(q);})
+   .then(function(list){COMS=list;renderPick();})
+   .catch(function(e){box.innerHTML='<div class="empty">Ne mogu učitati listu.<br>'+esc(e.message)+'</div>';});}
+function renderPick(){var box=document.getElementById('pk_list');
+  if(!COMS.length){box.innerHTML='<div class="empty">'+ic('users',44)+'Još nema nijedne zajednice.<br>Budi prvi — napravi svoj kvart.</div>';return;}
+  var t={};TYPES.forEach(function(x){t[x.id]=x;});
+  box.innerHTML=COMS.map(function(c){
+    var ty=t[c.type]||t.kvart,tags='';
+    if(c.isMember)tags+='<span class="tagz mem">Član</span>';
+    if(c.dist!=null)tags+='<span class="tagz '+(c.inZone?'':'out')+'">'+(c.inZone?'u zoni':km(c.dist)+' od tebe')+'</span>';
+    return '<div class="ccard" onclick="enterCom(\''+c.id+'\')">'+icoBox(c.type,26)+
+      '<div style="flex:1;min-width:0"><div class="cn">'+esc(c.name)+'</div>'+
+      '<div class="cm">'+tags+'<span>'+ty.n+' · '+km(c.radius)+' · '+c.memberCount+' članova</span></div></div>'+
+      '<div class="chev">&rsaquo;</div></div>';}).join('');}
+function enterCom(id){api('/api/communities/'+id+'?token='+encodeURIComponent(ME?ME.token:''))
+  .then(function(c){COM=c;saveComId();loadEvents();
+    document.getElementById('m_h').textContent=c.name;
+    document.getElementById('f_s').textContent=c.name;
+    goScr('smap');}).catch(function(e){toast(e.message);});}
+
+/* ── čarobnjak za pravljenje zajednice ── */
+var CMAP=null,newC={type:'kvart',radius:800,lat:null,lng:null,streets:[]};
+function hasMaps(){return typeof maplibregl!=='undefined';}
+function startCreate(){
+  newC={type:'kvart',radius:800,lat:GPS?GPS.lat:44.2,lng:GPS?GPS.lng:17.9,streets:[]};
+  ['c_name','c_desc','c_street','c_geo'].forEach(function(i){document.getElementById(i).value='';});
+  document.getElementById('c_rad').value=800;setRad(800);
+  renderTypes();renderChips();chk1();goStep(1);goScr('screate');
+  if(!GPS)getGPS().then(function(g){if(g&&CMAP){newC.lat=g.lat;newC.lng=g.lng;
+    CMAP.jumpTo({center:[g.lng,g.lat],zoom:14});}});}
+function cancelCreate(){goScr('spick');}
+function renderTypes(){
+  document.getElementById('tgrid').innerHTML=TYPES.map(function(t){
+    return '<div class="tc'+(newC.type===t.id?' sel':'')+'" onclick="pickType(\''+t.id+'\')">'+
+      icoBox(t.id,20)+'<div><div class="n">'+t.n+'</div><div class="d">'+t.d+'</div></div></div>';}).join('');
+  document.getElementById('presets').innerHTML=PRESETS.map(function(p){
+    return '<div class="pz'+(Math.abs(newC.radius-p.v)<1?' on':'')+'" onclick="setRad('+p.v+',1)">'+
+      p.n+' · '+km(p.v)+'</div>';}).join('');}
+function pickType(id){newC.type=id;
+  var t=TYPES.filter(function(x){return x.id===id;})[0];
+  if(t){newC.radius=t.r;document.getElementById('c_rad').value=t.r;setRad(t.r);}
+  renderTypes();}
+function chk1(){document.getElementById('w1btn').disabled=!document.getElementById('c_name').value.trim();}
+function goStep(n){[1,2,3].forEach(function(i){
+  document.getElementById('w'+i).style.display=(i===n)?'block':'none';
+  document.getElementById('stp'+i).classList.toggle('on',i<=n);});
+  if(n===2)setTimeout(initCMap,60);}
+function osmStyle(){return {version:8,sources:{osm:{type:'raster',
+  tiles:['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+         'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
+         'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png'],
+  tileSize:256,maxzoom:19,attribution:'\u00a9 OpenStreetMap doprinosioci'}},
+  layers:[{id:'osm',type:'raster',source:'osm'}]};}
+function mapFallback(elId,txt){var el=document.getElementById(elId);if(!el)return;
+  el.innerHTML='<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;'+
+    'justify-content:center;gap:10px;padding:20px;text-align:center;background:var(--gl)">'+
+    '<span class="ico" style="width:52px;height:52px;background:transparent">'+ic('map',40)+'</span>'+
+    '<div style="font-size:13.5px;font-weight:700;color:var(--gd)">Karta se ne može učitati</div>'+
+    '<div style="font-size:12px;color:var(--gd);line-height:1.5;opacity:.85">'+txt+'</div></div>';}
+function initCMap(){
+  if(!hasMaps()){
+    mapFallback('cmap','Nema veze — koristi „Pronađi mjesto" gore ili dugme za lokaciju. Zona se svejedno pravi.');
+    var h=document.getElementById('c_hint');if(h)h.style.display='none';
+    var x=document.getElementById('xhair');if(x)x.style.display='none';return;}
+  if(CMAP){CMAP.resize();return;}
+  CMAP=new maplibregl.Map({container:'cmap',style:osmStyle(),center:[newC.lng,newC.lat],zoom:14,attributionControl:true});
+  CMAP.on('load',function(){
+    CMAP.addSource('zone',{type:'geojson',data:circle(newC.lat,newC.lng,newC.radius)});
+    CMAP.addLayer({id:'zf',type:'fill',source:'zone',paint:{'fill-color':'#1a7a34','fill-opacity':.16}});
+    CMAP.addLayer({id:'zl',type:'line',source:'zone',paint:{'line-color':'#1a7a34','line-width':2.5}});
+    drawZone();});
+  CMAP.on('move',function(){var c=CMAP.getCenter();newC.lat=c.lat;newC.lng=c.lng;drawZone();});}
+function drawZone(){if(!CMAP||!CMAP.getSource('zone'))return;
+  CMAP.getSource('zone').setData(circle(newC.lat,newC.lng,newC.radius));}
+function circle(lat,lng,rad){var pts=[],R=6371000,d=rad/R,la=lat*Math.PI/180,ln=lng*Math.PI/180;
+  for(var i=0;i<=64;i++){var b=2*Math.PI*i/64;
+    var la2=Math.asin(Math.sin(la)*Math.cos(d)+Math.cos(la)*Math.sin(d)*Math.cos(b));
+    var ln2=ln+Math.atan2(Math.sin(b)*Math.sin(d)*Math.cos(la),Math.cos(d)-Math.sin(la)*Math.sin(la2));
+    pts.push([ln2*180/Math.PI,la2*180/Math.PI]);}
+  return {type:'Feature',geometry:{type:'Polygon',coordinates:[pts]}};}
+function setRad(v,jump){v=parseInt(v,10);newC.radius=v;
+  document.getElementById('c_rad').value=v;
+  document.getElementById('c_rv').textContent=km(v);
+  document.getElementById('c_rad').style.setProperty('--p',(((v-150)/(8000-150))*100)+'%');
+  var a=(Math.PI*v*v)/1e6;
+  var lbl=v<=350?'jedna ulica':v<=1200?'kvart':v<=2200?'naselje':v<=4000?'selo':'opština';
+  document.getElementById('c_zone').innerHTML=ic('info',17)+
+    '<span>Krug pokriva otprilike '+a.toFixed(a<1?2:1)+' km\u00b2 — veličina kao '+lbl+'.</span>';
+  renderTypes();drawZone();
+  if(jump&&CMAP)CMAP.easeTo({zoom:v<400?15.5:v<1200?14:v<2500?13:v<5000?12:11});}
+function myLoc(){getGPS().then(function(g){
+  if(!g)return toast('GPS nije dostupan — pomjeri kartu ručno.');
+  newC.lat=g.lat;newC.lng=g.lng;
+  if(CMAP)CMAP.easeTo({center:[g.lng,g.lat],zoom:14});
+  toast('Centar je na tvojoj lokaciji.');});}
+var geoT;
+function geoSearch(){clearTimeout(geoT);
+  var q=document.getElementById('c_geo').value.trim(),box=document.getElementById('c_geores');
+  if(q.length<2){box.classList.remove('on');return;}
+  geoT=setTimeout(function(){api('/api/geo?q='+encodeURIComponent(q)).then(function(r){
+    if(!r.length){box.classList.remove('on');return;}
+    box.innerHTML=r.map(function(x){
+      return '<div class="gr" onclick="pickGeo('+x.lat+','+x.lng+')">'+esc(x.name)+'</div>';}).join('');
+    box.classList.add('on');}).catch(function(){box.classList.remove('on');});},450);}
+function pickGeo(lat,lng){newC.lat=lat;newC.lng=lng;
+  document.getElementById('c_geores').classList.remove('on');
+  document.getElementById('c_geo').value='';
+  if(CMAP)CMAP.easeTo({center:[lng,lat],zoom:14});else initCMap();}
+function addStreet(){var i=document.getElementById('c_street'),v=i.value.trim();
+  if(!v)return;if(newC.streets.length>=40)return toast('Dosta je 40 ulica.');
+  if(newC.streets.indexOf(v)<0)newC.streets.push(v);i.value='';renderChips();}
+function rmStreet(i){newC.streets.splice(i,1);renderChips();}
+function renderChips(){var c=document.getElementById('c_chips');
+  c.innerHTML=newC.streets.length
+    ? newC.streets.map(function(s,i){return '<div class="chip">'+esc(s)+'<b onclick="rmStreet('+i+')">&times;</b></div>';}).join('')
+    : '<div style="font-size:12.5px;color:var(--tx3)">Nijedna ulica dodana — možeš preskočiti.</div>';}
+function createCom(){var b=document.getElementById('w3btn');
+  var body={token:ME.token,name:document.getElementById('c_name').value.trim(),
+    desc:document.getElementById('c_desc').value.trim(),type:newC.type,
+    lat:newC.lat,lng:newC.lng,radius:newC.radius,streets:newC.streets};
+  if(!body.lat||!body.lng)return toast('Odredi centar na karti.');
+  busy(b,true);
+  api('/api/communities',{method:'POST',body:body}).then(function(r){
+    busy(b,false,'Napravi zajednicu');
+    okSheet('star','Zajednica je tu!','„'+esc(r.community.name)+'" je napravljena. Ti si prvi član. Pošalji komšijama link ove stranice — dovoljno je da upišu ime i kliknu „Postani član".',
+      function(){enterCom(r.community.id);});
+  }).catch(function(e){busy(b,false,'Napravi zajednicu');toast(e.message);});}
+
+/* ── mapa ── */
+var MAP=null,MARKS=[];
+function loadEvents(){if(!COM)return;
+  api('/api/events?cid='+COM.id+'&token='+encodeURIComponent(ME?ME.token:''))
+    .then(function(list){EVENTS=list.sort(function(a,b){return b.ts-a.ts;});
+      renderFeed();renderStrip();drawMap();})
+    .catch(function(e){toast(e.message);});}
+function renderStrip(){
+  var today=EVENTS.filter(function(e){return /danas/i.test(e.day||'');}).length;
+  var go=EVENTS.reduce(function(a,e){return a+e.count;},0);
+  document.getElementById('k_today').textContent=today;
+  document.getElementById('k_all').textContent=EVENTS.length;
+  document.getElementById('k_mem').textContent=COM?COM.memberCount:0;
+  document.getElementById('k_go').textContent=go;
+  document.getElementById('nbg').textContent=EVENTS.length;}
+function initMap(){if(MAP)return;
+  if(!hasMaps()){mapFallback('map','Dešavanja i dalje rade — otvori karticu „Dešavanja" na dnu.');return;}
+  var clat=COM?COM.lat:44.2,clng=COM?COM.lng:17.9;
+  MAP=new maplibregl.Map({container:'map',style:osmStyle(),center:[clng,clat],zoom:14,attributionControl:true});
+  MAP.addControl(new maplibregl.NavigationControl({showCompass:false}),'top-left');
+  MAP.on('load',function(){
+    MAP.addSource('zone',{type:'geojson',data:circle(COM.lat,COM.lng,COM.radius)});
+    MAP.addLayer({id:'zf',type:'fill',source:'zone',paint:{'fill-color':'#1a7a34','fill-opacity':.10}});
+    MAP.addLayer({id:'zl',type:'line',source:'zone',paint:{'line-color':'#1a7a34','line-width':2,'line-dasharray':[2,1.6]}});
+    drawMap();});}
+function drawMap(){if(!COM||!hasMaps())return;
+  if(!MAP){initMap();return;}
+  if(!MAP.isStyleLoaded()){MAP.once('idle',drawMap);return;}
+  if(MAP.getSource('zone'))MAP.getSource('zone').setData(circle(COM.lat,COM.lng,COM.radius));
+  MARKS.forEach(function(m){m.remove();});MARKS=[];
+  EVENTS.forEach(function(e){
+    var el=document.createElement('div');el.className='pinm';
+    el.innerHTML='<div class="ph"><i>'+ic(e.cat,17)+'</i></div>';
+    el.onclick=function(){openEv(e.id);};
+    MARKS.push(new maplibregl.Marker({element:el,anchor:'bottom'}).setLngLat([e.lng,e.lat]).addTo(MAP));});
+  MAP.easeTo({center:[COM.lng,COM.lat],
+    zoom:COM.radius<400?15:COM.radius<1200?14:COM.radius<2500?13:12,duration:400});}
+function mapLoc(){getGPS().then(function(g){if(!g)return toast('GPS nije dostupan.');
+  if(MAP)MAP.easeTo({center:[g.lng,g.lat],zoom:15});});}
+
+/* ── dešavanja ── */
+function renderFeed(){
+  var used=[];EVENTS.forEach(function(e){if(used.indexOf(e.cat)<0)used.push(e.cat);});
+  document.getElementById('frow').innerHTML=
+    '<div class="fch'+(filt==='all'?' on':'')+'" onclick="setFilt(\'all\')">Sve</div>'+
+    used.map(function(k){var c=CATS[k]||CATS.ostalo;
+      return '<div class="fch'+(filt===k?' on':'')+'" onclick="setFilt(\''+k+'\')">'+ic(k,15)+c.n+'</div>';}).join('');
+  var list=EVENTS.filter(function(e){return filt==='all'||e.cat===filt;});
+  var fl=document.getElementById('flist');
+  if(!list.length){fl.innerHTML='<div class="empty">'+ic('ostalo',44)+
+    'Još nema dešavanja.<br>Budi prvi — klikni „Pokreni nešto" na mapi.</div>';return;}
+  fl.innerHTML=list.map(function(e){
+    var c=CATS[e.cat]||CATS.ostalo,when=[e.day,e.time].filter(Boolean).join(' · ');
+    var g=e.goers.slice(0,4).map(function(x){return ava(x.name);}).join('');
+    return '<div class="fcd"><div class="fct" onclick="openEv(\''+e.id+'\')">'+icoBox(e.cat,25)+
+      '<div style="flex:1;min-width:0"><div class="fti">'+esc(e.title)+'</div><div class="fad">'+
+      (when?'<span class="mc">'+ic('clock',12)+esc(when)+'</span>':'')+
+      (e.place?'<span class="mc">'+ic('pin',12)+esc(e.place)+'</span>':'')+
+      '</div></div></div><div class="fbo"><div class="org">'+ava(e.name)+esc(e.name)+'</div>'+
+      '<button class="jbtn'+(e.joined?' jd':'')+'" onclick="joinEv(\''+e.id+'\',event)">'+
+      ic(e.joined?'check':'plus',14)+(e.joined?c.d:c.j)+'</button></div>'+
+      '<div class="goers">'+g+'<span class="cnt">'+e.count+' '+c.v+'</span></div></div>';}).join('');}
+function setFilt(f){filt=f;renderFeed();}
+function joinEv(id,ev){if(ev)ev.stopPropagation();
+  if(!COM.isMember)return toast('Postani član zajednice prvo.');
+  api('/api/events/'+id+'/join',{method:'POST',body:{token:ME.token}}).then(function(r){
+    var e=EVENTS.filter(function(x){return x.id===id;})[0];
+    if(e){e.joined=r.joined;e.count=r.count;
+      if(r.joined)e.goers.push({id:ME.id,name:ME.name});
+      else e.goers=e.goers.filter(function(g){return g.id!==ME.id;});}
+    toast(r.joined?'Pridružio si se.':'Otkazao si dolazak.');
+    renderFeed();renderStrip();
+    if(document.getElementById('ov_ev').classList.contains('on'))openEv(id);
+  }).catch(function(e){toast(e.message);});}
+
+function openEv(id){
+  var e=EVENTS.filter(function(x){return x.id===id;})[0];if(!e)return;
+  var c=CATS[e.cat]||CATS.ostalo;
+  var when=[e.day,e.time].filter(Boolean).join(' · ')||'po dogovoru';
+  var cm=e.comments.length?e.comments.map(function(x){
+    return '<div class="cmt">'+ava(x.name)+'<div style="flex:1"><div class="cn3">'+esc(x.name)+
+      '</div><div class="ct">'+esc(x.txt)+'</div><div class="cw">'+ago(x.t)+'</div></div></div>';}).join('')
+    :'<div style="font-size:13px;color:var(--tx3);padding:6px 0">Još nema poruka.</div>';
+  document.getElementById('ev_body').innerHTML=
+    '<div class="shh" style="display:flex;gap:13px;align-items:center">'+
+      '<span class="ico" style="width:54px;height:54px">'+ic(e.cat,27)+'</span>'+
+      '<div><h3>'+esc(e.title)+'</h3><p>'+c.n+' · '+ago(e.ts)+'</p></div></div>'+
+    '<div class="dsec"><h4>Detalji</h4>'+
+      '<div class="dmrow">'+ic('person',18)+esc(e.name)+'</div>'+
+      '<div class="dmrow">'+ic('clock',18)+esc(when)+'</div>'+
+      (e.place?'<div class="dmrow">'+ic('pin',18)+esc(e.place)+'</div>':'')+
+      (e.note?'<p style="font-size:13.5px;color:var(--tx2);line-height:1.55;margin-top:11px">'+esc(e.note)+'</p>':'')+
+    '</div>'+
+    '<button class="abtn '+(e.joined?'se':'pr')+'" onclick="joinEv(\''+e.id+'\')">'+
+      ic(e.joined?'check':'plus',19)+(e.joined?c.d:c.j)+' · '+e.count+' '+c.v+'</button>'+
+    '<div class="dsec" style="margin-top:20px"><h4>Ko ide · '+e.count+'</h4>'+
+      '<div class="goers">'+e.goers.map(function(x){return ava(x.name);}).join('')+'</div></div>'+
+    '<div class="dsec"><h4>Dogovor</h4>'+cm+
+      '<div class="cbox"><input id="cm_in" placeholder="Napiši komšijama…" maxlength="400" '+
+      'onkeydown="if(event.key===\'Enter\')sendCm(\''+e.id+'\')">'+
+      '<button onclick="sendCm(\''+e.id+'\')">'+ic('send',19)+'</button></div></div>'+
+    (e.mine||COM.isFounder?'<button class="abtn dg" onclick="delEv(\''+e.id+'\')">'+ic('trash',19)+'Obriši dešavanje</button>':'');
+  document.getElementById('ov_ev').classList.add('on');}
+function sendCm(id){var i=document.getElementById('cm_in');if(!i||!i.value.trim())return;
+  api('/api/events/'+id+'/comment',{method:'POST',body:{token:ME.token,txt:i.value.trim()}})
+    .then(function(r){var e=EVENTS.filter(function(x){return x.id===id;})[0];
+      if(e)e.comments=r.comments;openEv(id);}).catch(function(e){toast(e.message);});}
+function delEv(id){if(!confirm('Obrisati ovo dešavanje?'))return;
+  api('/api/events/'+id,{method:'DELETE',body:{token:ME.token}}).then(function(){
+    document.getElementById('ov_ev').classList.remove('on');toast('Obrisano.');loadEvents();
+  }).catch(function(e){toast(e.message);});}
+
+/* ── novo dešavanje ── */
+var newEvCat=null;
+function openCreateEv(){
+  if(!COM.isMember){goScr('scom');return toast('Postani član da bi objavljivao.');}
+  newEvCat=null;
+  ['nw_title','nw_day','nw_time','nw_place','nw_note'].forEach(function(i){document.getElementById(i).value='';});
+  document.getElementById('nw_p').textContent='U zajednici: '+COM.name;
+  document.getElementById('nw_btn').disabled=true;
+  renderEvCats();document.getElementById('ov_new').classList.add('on');}
+function renderEvCats(){
+  document.getElementById('nw_cats').innerHTML=Object.keys(CATS).map(function(k){
+    return '<div class="cc'+(newEvCat===k?' sel':'')+'" onclick="pickEvCat(\''+k+'\')">'+
+      icoBox(k,19)+'<div class="cn2">'+CATS[k].n+'</div></div>';}).join('');}
+function pickEvCat(k){newEvCat=k;renderEvCats();chkNew();}
+function chkNew(){document.getElementById('nw_btn').disabled=
+  !(newEvCat&&document.getElementById('nw_title').value.trim());}
+function publishEv(){var b=document.getElementById('nw_btn');busy(b,true);
+  var body={token:ME.token,cid:COM.id,cat:newEvCat,
+    title:document.getElementById('nw_title').value.trim(),
+    day:document.getElementById('nw_day').value.trim(),
+    time:document.getElementById('nw_time').value.trim(),
+    place:document.getElementById('nw_place').value.trim(),
+    note:document.getElementById('nw_note').value.trim()};
+  if(GPS){body.lat=GPS.lat;body.lng=GPS.lng;}
+  api('/api/events',{method:'POST',body:body}).then(function(){
+    busy(b,false,'Objavi u zajednici');
+    document.getElementById('ov_new').classList.remove('on');
+    okSheet('star','Objavljeno!','Komšije iz zajednice „'+esc(COM.name)+'" sad to vide. Kako se pridružuju, vidjet ćeš ih ovdje. Ništa ovdje ne košta.',
+      function(){loadEvents();goScr('sfeed');});
+  }).catch(function(e){busy(b,false,'Objavi u zajednici');toast(e.message);});}
+function okSheet(icon,t,p,cb){
+  document.getElementById('ok_body').innerHTML='<div class="ic">'+ic(icon,36)+'</div>'+
+    '<h3>'+t+'</h3><p>'+p+'</p><button class="abtn pr" id="ok_b">Super</button>';
+  document.getElementById('ov_ok').classList.add('on');
+  document.getElementById('ok_b').onclick=function(){
+    document.getElementById('ov_ok').classList.remove('on');if(cb)cb();};}
+
+/* ── zajednica ── */
+function distM(aLat,aLng,bLat,bLng){var R=6371000,toR=function(x){return x*Math.PI/180;};
+  var dLat=toR(bLat-aLat),dLng=toR(bLng-aLng);
+  var s=Math.pow(Math.sin(dLat/2),2)+Math.cos(toR(aLat))*Math.cos(toR(bLat))*Math.pow(Math.sin(dLng/2),2);
+  return Math.round(2*R*Math.asin(Math.sqrt(s)));}
+function renderCom(){if(!COM)return;
+  var t=TYPES.filter(function(x){return x.id===COM.type;})[0]||TYPES[1];
+  document.getElementById('c_h').textContent=COM.name;
+  document.getElementById('c_s2').textContent=t.n+' · '+km(COM.radius)+' oko centra';
+  var inZone=GPS?distM(GPS.lat,GPS.lng,COM.lat,COM.lng)<=COM.radius:null;
+  var joinBtn=COM.isMember
+    ? '<button class="abtn se" onclick="leaveCom()">'+ic('check',19)+'Ti si član — istupi</button>'
+    : '<button class="abtn pr" id="jc_b" onclick="joinCom()">'+ic('pomoc',19)+'Postani član</button>';
+  var zoneNote=COM.isMember?''
+    :(inZone===null?'<div class="note warn">'+ic('info',17)+'<span>Ne mogu provjeriti tvoju lokaciju. Svejedno se možeš učlaniti.</span></div>'
+    :inZone?'<div class="note">'+ic('pin',17)+'<span>Ti si unutar zone ove zajednice.</span></div>'
+    :'<div class="note warn">'+ic('pin',17)+'<span>Ti si '+km(distM(GPS.lat,GPS.lng,COM.lat,COM.lng))+
+      ' od centra, izvan zone. Možeš se svejedno učlaniti.</span></div>');
+  var streets=COM.streets&&COM.streets.length
+    ? '<div class="blk"><div class="blkh">Ulice u zajednici<span>'+COM.streets.length+'</span></div>'+
+      '<div class="pad"><div class="chips">'+COM.streets.map(function(s){
+        return '<div class="chip">'+esc(s)+'</div>';}).join('')+'</div></div></div>' : '';
+  var mem=(COM.members||[]).slice(0,20).map(function(m){
+    return '<div class="row">'+ava(m.name)+'<div class="rn">'+esc(m.name)+'</div>'+
+      '<div class="rd">'+ago(m.joined)+'</div></div>';}).join('');
+  document.getElementById('c_body').innerHTML=
+    '<div class="npb"><h3>'+ic('shield',20)+'Ovo nije biznis</h3>'+
+      '<p>PINIT Zajednica je besplatna i neprofitna. Niko ne zarađuje — ni mi, ni komšije. Nema članarine, reklama ni prodaje podataka.</p>'+
+      '<div class="nptags"><span class="nptag">'+ic('check',12)+'0 KM</span>'+
+      '<span class="nptag">'+ic('check',12)+'Bez reklama</span>'+
+      '<span class="nptag">'+ic('check',12)+'Za susjede</span></div></div>'+
+    zoneNote+joinBtn+
+    (COM.desc?'<div class="blk"><div class="pad">'+esc(COM.desc)+'</div></div>':'')+
+    '<div class="sgrid">'+
+      '<div class="scard"><div class="v">'+COM.memberCount+'</div><div class="l">Članova</div></div>'+
+      '<div class="scard"><div class="v">'+EVENTS.length+'</div><div class="l">Dešavanja</div></div>'+
+      '<div class="scard"><div class="v">'+km(COM.radius)+'</div><div class="l">Prečnik zone</div></div>'+
+      '<div class="scard"><div class="v">'+((Math.PI*COM.radius*COM.radius)/1e6).toFixed(1)+
+        '</div><div class="l">km\u00b2 površine</div></div></div>'+
+    streets+
+    '<div class="blk"><div class="blkh">Članovi<span>osnovao '+esc(COM.founderName)+'</span></div>'+
+      (mem||'<div class="pad">Nema članova.</div>')+'</div>'+
+    '<button class="abtn se" onclick="shareCom()">'+ic('link',19)+'Pozovi komšije</button>';}
+function joinCom(){var b=document.getElementById('jc_b');busy(b,true);
+  api('/api/communities/'+COM.id+'/join',{method:'POST',body:{token:ME.token}})
+    .then(function(){return api('/api/communities/'+COM.id+'?token='+encodeURIComponent(ME.token));})
+    .then(function(c){COM=c;renderCom();renderStrip();
+      okSheet('pomoc','Dobrodošao u komšiluk!','Sad si član zajednice „'+esc(c.name)+
+        '". Možeš pokretati dešavanja i pridruživati se. Besplatno, kao i sve ovdje.',null);})
+    .catch(function(e){busy(b,false,ic('pomoc',19)+'Postani član');toast(e.message);});}
+function leaveCom(){if(!confirm('Istupiti iz zajednice „'+COM.name+'"?'))return;
+  api('/api/communities/'+COM.id+'/leave',{method:'POST',body:{token:ME.token}})
+    .then(function(){return api('/api/communities/'+COM.id+'?token='+encodeURIComponent(ME.token));})
+    .then(function(c){COM=c;renderCom();renderStrip();toast('Istupio si.');})
+    .catch(function(e){toast(e.message);});}
+function shareCom(){var url=location.origin+'/';
+  var txt='Uđi u našu zajednicu „'+COM.name+'" na PINIT — besplatno je: '+url;
+  if(navigator.share)navigator.share({title:'PINIT Zajednica',text:txt,url:url}).catch(function(){});
+  else if(navigator.clipboard)navigator.clipboard.writeText(txt).then(function(){
+    toast('Link kopiran — pošalji komšijama.');});
+  else toast(url);}
+
+/* ── profil ── */
+function renderProf(){if(!ME)return;
+  document.getElementById('p_s').textContent=ME.name;
+  var mine=COMS.filter(function(c){return c.isMember;});
+  var a=avc(ME.name);
+  document.getElementById('p_body').innerHTML=
+    '<div style="display:flex;align-items:center;gap:15px">'+
+      '<div class="ava" style="width:66px;height:66px;font-size:27px;'+
+      'background:linear-gradient(135deg,var(--gm),var(--gd));color:#fff">'+ini(ME.name)+'</div>'+
+      '<div style="min-width:0"><div style="font-family:var(--fh);font-size:21px;font-weight:700;letter-spacing:-.4px">'+
+      esc(ME.name)+'</div><div style="font-size:13px;color:var(--tx3);margin-top:3px">'+
+      (COM?esc(COM.name):'Nisi u zajednici')+'</div></div></div>'+
+    '<div class="npb"><h3>'+ic('heart',20)+'Zašto je besplatno</h3>'+
+      '<p>Zato što komšiluk nije tržište. Nema pretplate, „premium" verzije, oglasa, i tvoji podaci se ne prodaju nikome. Ako neko ikad zatraži novac za ovo — to nismo mi.</p></div>'+
+    '<div class="blk"><div class="blkh">Moje zajednice<span>'+mine.length+'</span></div>'+
+      (mine.length?mine.map(function(c){
+        return '<div class="row" style="cursor:pointer" onclick="enterCom(\''+c.id+'\')">'+
+          icoBox(c.type,19)+'<div class="rn">'+esc(c.name)+'</div>'+
+          '<div class="rd">'+c.memberCount+' članova &rsaquo;</div></div>';}).join('')
+       :'<div class="pad">Nisi član nijedne zajednice.</div>')+'</div>'+
+    '<div class="blk"><div class="setrow"><span>Izgled</span>'+
+      '<div class="segbtn" onclick="toggleTheme()"><span id="segLight">Svijetli</span>'+
+      '<span id="segDark">Tamni</span></div></div></div>'+
+    '<button class="abtn se" onclick="goScr(\'spick\')">'+ic('search',19)+'Pronađi drugu zajednicu</button>'+
+    '<button class="abtn gh" onclick="logout()">Odjavi se</button>';
+  applyTheme(currentTheme());}
+
+/* ── pokretanje ── */
+(function start(){
+  document.getElementById('freeBadge').innerHTML=ic('heart',16)+'Besplatno · niko ne zarađuje';
+  document.getElementById('authNote').innerHTML=ic('shield',17)+
+    '<span>Bez lozinke, bez e-maila, bez reklama. Ime se čuva samo da komšije znaju ko si.</span>';
+  document.getElementById('w3note').innerHTML=ic('info',17)+
+    '<span><b>Podsjetnik:</b> zajednica je besplatna i ostaje besplatna. Nema članarine, reklama ni prodaje podataka. Ti si osnivač — to znači samo da si prvi član, ne vlasnik.</span>';
+  document.getElementById('mkBtn').innerHTML=ic('plus',19)+'Napravi novu zajednicu';
+  document.getElementById('addStBtn').innerHTML=ic('plus',19);
+  document.getElementById('fabBtn').innerHTML=ic('plus',18)+'<span>Pokreni nešto</span>';
+  document.getElementById('switchBtn').innerHTML=ic('swap',15)+'<b>Promijeni</b>';
+  setRad(800);renderTypes();renderChips();
+  document.getElementById('a_name').addEventListener('keydown',function(e){if(e.key==='Enter')doAuth();});
+  if(!ME){goScr('sauth');return;}
+  var last=null;try{last=localStorage.getItem('pz_com');}catch(e){}
+  getGPS();
+  if(last){api('/api/communities/'+last+'?token='+encodeURIComponent(ME.token)).then(function(c){
+      COM=c;loadEvents();
+      document.getElementById('m_h').textContent=c.name;
+      document.getElementById('f_s').textContent=c.name;
+      goScr('smap');}).catch(function(){goScr('spick');});}
+  else goScr('spick');
+})();
+</script>
+</body>
+</html>

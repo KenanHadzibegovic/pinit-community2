@@ -1,0 +1,17 @@
+{
+  "name": "PINIT Zajednica — komšiluk na okupu",
+  "short_name": "PINIT Zajednica",
+  "description": "Napravi zajednicu za svoj kvart ili selo i dogovaraj druženja, radne akcije i pomoć. Besplatno, bez reklama.",
+  "lang": "bs",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1a7a34",
+  "theme_color": "#1a7a34",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
